@@ -1,7 +1,12 @@
 class MoviesController < ApplicationController
-  @title_hilite = ''
-  @release_date_hilite = ''
-  @all_ratings = []
+  def initialize
+    @title_hilite = ''
+    @release_date_hilite = ''
+    @all_ratings = Movie.all_ratings
+    @selected_ratings = Movie.all_ratings
+    @sort_by = 'none'
+    super
+  end
 
   def show
     id = params[:id] # retrieve movie ID from URI route
@@ -10,20 +15,22 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @all_ratings = Movie.all_ratings
-    sort_by = params[:sort_by]
-    if sort_by =~ /title/
+    @selected_ratings = params[:ratings].keys if params[:ratings] != nil
+    @sort_by = params[:sort_by] if params[:sort_by] != nil
+
+    print "DEBUG: @selected_ratings = ", @selected_ratings, "@sort_by = ", @sort_by
+    if @sort_by =~ /title/
       @title_hilite = 'hilite'
       @release_date_hilite = ''
-      @movies = Movie.all(:order => 'title')
-    elsif sort_by =~ /release_date/
+      @movies = Movie.find(:all, :conditions => {:rating => @selected_ratings}, :order => 'title')
+    elsif @sort_by =~ /release_date/
       @title_hilite = ''
       @release_date_hilite = 'hilite'
-      @movies = Movie.all(:order => 'release_date')
+      @movies = Movie.find(:all, :conditions => {:rating => @selected_ratings}, :order => 'release_date')
     else
       @title_hilite = ''
       @release_date_hilite = ''
-      @movies = Movie.all
+      @movies = Movie.find(:all, :conditions => {:rating => @selected_ratings})
     end
   end
 
