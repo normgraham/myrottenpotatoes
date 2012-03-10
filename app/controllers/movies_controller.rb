@@ -12,10 +12,22 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @selected_ratings = params[:ratings].keys if params[:ratings] != nil
-    @sort_by = params[:sort_by] if params[:sort_by] != nil
+    if !params.key? :rating and !params.key? :sort_by
+      # no state was passed in the URI. Let's check session
+      if (session.key? :select_hash and !session[:select_hash].empty?) or session.key? :sort_by
+        # we've got some session state. let's use it.
+        redirect_to movies_path(session[:select_hash].merge({:sort_by => session[:sort_by]}))
+      end
+    end
+
     @select_hash = {}
-    @selected_ratings.each {|r| @select_hash.store("ratings[#{r}]",1)}
+    if params.key? :ratings
+      @selected_ratings = params[:ratings].keys
+      @selected_ratings.each {|r| @select_hash.store("ratings[#{r}]",1)}
+    end
+    if params.key? :sort_by
+      @sort_by = params[:sort_by]
+    end
 
     if @sort_by =~ /title/
       @title_hilite = 'hilite'
@@ -30,7 +42,8 @@ class MoviesController < ApplicationController
       @release_date_hilite = ''
       @movies = Movie.find(:all, :conditions => {:rating => @selected_ratings})
     end
-    flash[:sort_by => @sort_by]
+    session[:sort_by] = @sort_by
+    session[:select_hash] = @select_hash
   end
 
   def new
