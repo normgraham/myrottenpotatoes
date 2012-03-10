@@ -1,10 +1,7 @@
 class MoviesController < ApplicationController
   def initialize
-    @title_hilite = ''
-    @release_date_hilite = ''
     @all_ratings = Movie.all_ratings
     @selected_ratings = Movie.all_ratings
-    @sort_by = 'none'
     super
   end
 
@@ -17,8 +14,9 @@ class MoviesController < ApplicationController
   def index
     @selected_ratings = params[:ratings].keys if params[:ratings] != nil
     @sort_by = params[:sort_by] if params[:sort_by] != nil
+    @select_hash = {}
+    @selected_ratings.each {|r| @select_hash.store("ratings[#{r}]",1)}
 
-    print "DEBUG: @selected_ratings = ", @selected_ratings, "@sort_by = ", @sort_by
     if @sort_by =~ /title/
       @title_hilite = 'hilite'
       @release_date_hilite = ''
@@ -32,6 +30,7 @@ class MoviesController < ApplicationController
       @release_date_hilite = ''
       @movies = Movie.find(:all, :conditions => {:rating => @selected_ratings})
     end
+    flash[:sort_by => @sort_by]
   end
 
   def new
